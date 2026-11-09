@@ -324,12 +324,12 @@ function blocks(lines,st,large){
  }
  return out;
 }
-let VSEC=0;
+let VSEC=0,LMIN=0;
 function toSec(t){if(!t)return 0;const p=t.split(':').map(Number);if(p.some(isNaN))return 0;return p.reduce((a,x)=>a*60+x,0)}
-function kitHtml(ex,readMin,vidSec){
+function kitHtml(ex,readMin,vidSec,linkMin){
  const rows=[];
  const row=(ic,label,txt)=>rows.push(`<li class="d-flex align-items-baseline mb-1"><span class="fas fa-${ic} fa-fw mr-3" aria-hidden="true"></span><span><strong>${label}:</strong> ${txt}</span></li>`);
- row('clock','Time','Reading: '+readMin+' min'+(vidSec>0?' | Video: '+Math.max(1,Math.round(vidSec/60))+' min':''));
+ row('clock','Time','Reading: '+readMin+' min'+(linkMin>0?' | Linked reading: '+Math.round(linkMin)+' min':'')+(vidSec>0?' | Video: '+Math.max(1,Math.round(vidSec/60))+' min':''));
  if(ex.before)row('clipboard-list','Before you start',inline(ex.before));
  if(ex.mat)row('tools','Materials needed',inline(ex.mat));
  if(ex.kind==='key'&&ex.terms.trim())row('key','Key terms',inline(ex.terms.trim().replace(/\s*\n\s*/g,', ')));
@@ -339,12 +339,13 @@ function kitHtml(ex,readMin,vidSec){
 }
 function convert(md,ex){
  ex=ex||{};
- const st={lvl:1};VSEC=0;
+ const st={lvl:1};VSEC=0;LMIN=0;
+ md=md.replace(/[ \t]*\{reading (\d+(?:\.\d+)?)\}/g,(m,n)=>{LMIN+=parseFloat(n);return ''});
  md=md.replace(/\r\n?/g,'\n').replace(/\t/g,'    ');
  let html=blocks(md.split('\n'),st);
  const plain=html.replace(/<div class="video-wrapper"[\s\S]*?<\/iframe><\/div>\n<div class="video-text">[\s\S]*?<\/div>\n<\/div>\n/g,'').replace(/<h1[\s\S]*?<\/h1>\n/,'');
  const words=plain.replace(/<[^>]+>/g,' ').replace(/\(opens in a new tab\)/g,' ').replace(/&\w+;/g,' ').split(/\s+/).filter(Boolean).length;
- const kit=kitHtml(ex,Math.max(1,Math.round(words/200)),VSEC);
+ const kit=kitHtml(ex,Math.max(1,Math.round(words/200)),VSEC,LMIN);
  const hm=html.match(/^([\s\S]*?<\/h1>\n)/);
  html=hm&&/<h1/.test(hm[1])?hm[1]+kit+html.slice(hm[0].length):kit+html;
  {const parts=[];if(ex.uwm)parts.push(esc(ex.uwm));if(ex.date){const d=ex.date.split('-').map(Number);parts.push(`Last published: ${new Date(d[0],d[1]-1,d[2]).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}`)}if(parts.length)html+=`<p>${parts.join('<br>')}</p>\n`}
@@ -726,12 +727,23 @@ function parseChunks(md){
  suggest(out);return out;
 }
 function textOf(c){return c.kind==='list'?c.items.map(x=>x.t).join(' '):c.kind==='raw'?'':c.lines.join(' ')}
+const READRE=/\b(read|reading|readings|article|chapter|report|paper|story|essay|blog)\b/i;
+function readHint(pr){return !!(pr&&pr.lines&&READRE.test(pr.lines.join(' ').slice(0,200)))}
+function estimate(c){
+ const l=c.link;if(!l||!l.url)return;l.est='busy';renderBoxes();
+ const ac=new AbortController(),to=setTimeout(()=>ac.abort(),8000);
+ fetch(l.url,{signal:ac.signal}).then(r=>r.ok?r.text():Promise.reject()).then(h=>{clearTimeout(to);
+  const d=new DOMParser().parseFromString(h,'text/html');d.querySelectorAll('script,style,nav,header,footer,aside,form,noscript,svg').forEach(e=>e.remove());
+  const root=d.querySelector('article')||d.querySelector('main')||d.body;
+  const w=((root&&root.textContent)||'').split(/\s+/).filter(Boolean).length;
+  if(w>=150){l.mins=String(Math.max(1,Math.round(w/200)));l.est='ok'}else l.est='fail';renderBoxes()}).catch(()=>{l.est='fail';renderBoxes()});
+}
 function linkPass(ch){
  ch.forEach((c,i)=>{
   if(c.kind!=='para'||c.type!=='para'||!c.lines)return;
   const lk=linkOf(c.lines.join(' '));if(!lk||!lk.bare)return;
   const pr=ch.slice(0,i).reverse().find(x=>x.type!=='removed');
-  c.type='link';c.sug='link';c.link={url:lk.url,text:guessLinkText(pr)};
+  c.type='link';c.sug='link';c.link={url:lk.url,text:guessLinkText(pr),rd:readHint(pr),mins:''};
  });
 }
 function directLinkPass(ch){
@@ -844,7 +856,9 @@ function boxesHtml(){
    if(c.type==='heading')ctl+=`<label>Level <select data-a="level" data-i="${i}">${[2,3,4].map(n=>`<option${c.level===n?' selected':''}>${n}</option>`).join('')}</select></label>`;
    if(c.type==='link'){const l=c.link,bad=!l.text||/^(https?:\/\/|www\.)/i.test(l.text)||/^(click here|here|link|read more)$/i.test(l.text.trim());
     if(bad)ctl+='<span class="tag warn">Link text should describe where it goes</span>';
-    ctl+=`<div class="vf" style="grid-template-columns:1fr 1fr"><label>Link text (what students read)<input type="text" data-a="ltext" data-i="${i}" value="${esc(l.text)}"></label><label>Link address<input type="text" data-a="lurl" data-i="${i}" value="${esc(l.url)}"></label></div>`}
+    ctl+=`<div class="vf" style="grid-template-columns:1fr 1fr"><label>Link text (what students read)<input type="text" data-a="ltext" data-i="${i}" value="${esc(l.text)}"></label><label>Link address<input type="text" data-a="lurl" data-i="${i}" value="${esc(l.url)}"></label></div>`;
+    const nm=l.rd&&!(parseFloat(l.mins)>0);
+    ctl+=`<div class="vf" style="grid-template-columns:auto 9rem auto 1fr;align-items:end"><label style="flex-direction:row;gap:.4rem;align-items:center"><input type="checkbox" data-a="lrd" data-i="${i}" ${l.rd?'checked':''}> This is a reading</label>`+(l.rd?`<label>Minutes<input type="number" min="1" data-a="lmins" data-i="${i}" value="${esc(l.mins||'')}"></label><button type="button" data-a="lest" data-i="${i}">${l.est==='busy'?'Reading the page…':'Estimate from page'}</button><span>${nm?'<span class="tag warn">Add minutes</span> ':''}${l.est==='fail'?'<span class="tag warn">Couldn\'t read that page from the browser (many sites block this, and library links need a login). Type the minutes.</span>':''}${l.est==='ok'?'<span class="tag">Estimated from the page. Adjust if needed.</span>':''}</span>`:'')+'</div>'}
    if(c.type==='video'){const v=c.video,miss=[];if(!v.url)miss.push('link');if(!v.title)miss.push('title');if(!v.length)miss.push('length');if(!v.language)miss.push('language');
     if(miss.length)ctl+=`<span class="tag warn">Needed: ${miss.join(', ')}</span>`;
     ctl+=`<div class="vf"><label>Video link<input type="text" data-a="vurl" data-i="${i}" value="${esc(v.url)}"></label><label>Title (for screen readers)<input type="text" data-a="vtitle" data-i="${i}" value="${esc(v.title)}"></label><label>Length<input type="text" data-a="vlen" data-i="${i}" value="${esc(v.length)}" placeholder="3:29"></label><label>Language<input type="text" data-a="vlang" data-i="${i}" value="${esc(v.language)}" placeholder="English with subtitles"></label></div>`}
@@ -884,7 +898,7 @@ function chunkMd(c){
  switch(c.type){
   case 'raw':return c.text;
   case 'quote':return c.lines.map(l=>'> '+l).join('\n');
-  case 'link':{const l=c.link||{};return '['+(l.text||l.url||'link')+']('+(l.url||'')+')'}
+  case 'link':{const l=c.link||{};return '['+(l.text||l.url||'link')+']('+(l.url||'')+')'+(l.rd&&parseFloat(l.mins)>0?' {reading '+parseFloat(l.mins)+'}':'')}
   case 'video':{const v=c.video||{};return '::: video '+plainUrl(v.url||'')+'\n'+(v.title?'title: '+v.title+'\n':'')+(v.length?'length: '+v.length+'\n':'')+(v.language?'language: '+v.language+'\n':'')+':::'}
   case 'heading':return '#'.repeat(c.level)+' '+text;
   case 'acctext':return c.link&&c.link.url?'['+(c.link.text||c.link.url)+']('+c.link.url+')':c.kind==='list'?listMd(c,''):text;
@@ -928,7 +942,8 @@ function buildMarkdown(title){
 $('boxes').addEventListener('click',e=>{
  const b=e.target.closest('button[data-a]');if(!b)return;
  const i=+b.dataset.i,c=CH[i],a=b.dataset.a;
- if(a==='type'){c.type=b.dataset.v;if(c.type==='link'&&!c.link){const lk=linkOf(c.lines.join(' '));const pr=CH.slice(0,i).reverse().find(x=>x.type!=='removed');c.link={url:lk?lk.url:'',text:lk?lk.text||guessLinkText(pr):''}}if(c.type==='video'&&!c.video){setTimeout(()=>ytTitle(c),0);const v=vidOf(c.lines.join(' '));c.video={url:v?v.url:'',title:v?v.title:'',length:v?v.length:'',language:(v&&v.language)||DEF_LANG}}if(c.type==='heading')c.level=lvl(c.lines.join(' '),c.level)}
+ if(a==='lest'){estimate(c);return}
+ if(a==='type'){c.type=b.dataset.v;if(c.type==='link'&&!c.link){const lk=linkOf(c.lines.join(' '));const pr=CH.slice(0,i).reverse().find(x=>x.type!=='removed');c.link={url:lk?lk.url:'',text:lk?lk.text||guessLinkText(pr):'',rd:readHint(pr),mins:''}}if(c.type==='video'&&!c.video){setTimeout(()=>ytTitle(c),0);const v=vidOf(c.lines.join(' '));c.video={url:v?v.url:'',title:v?v.title:'',length:v?v.length:'',language:(v&&v.language)||DEF_LANG}}if(c.type==='heading')c.level=lvl(c.lines.join(' '),c.level)}
  else if(a==='remove'){c.prevType=c.type;c.type='removed'}
  else if(a==='restore'){c.type=c.prevType||c.kind}
  else if(a==='split'){
@@ -952,6 +967,8 @@ $('boxes').addEventListener('change',e=>{
  else if(a==='utext'){c.ut=c.ut||{};c.ut[t.dataset.k]=t.value}
  else if(a==='lurl')c.link.url=clean(t.value.trim());
  else if(a==='ltext')c.link.text=t.value;
+ else if(a==='lrd')c.link.rd=t.checked;
+ else if(a==='lmins')c.link.mins=t.value;
  else if(a==='vurl'){c.video.url=clean(plainUrl(t.value));ytTitle(c)}
  else if(a==='vtitle')c.video.title=t.value;
  else if(a==='vlen')c.video.length=t.value.trim();
