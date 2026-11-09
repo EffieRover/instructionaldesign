@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Icons in this tool are from Font Awesome Free (https://fontawesome.com), licensed CC BY 4.0: https://fontawesome.com/license/free -->
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,7 +29,9 @@ button:hover,label.btn:hover{background:#eee}
 .box{border:1px solid #d5d9de;border-radius:6px;margin:.6rem 1rem;background:#fff}
 .box.gone{opacity:.55}
 .box .txt{padding:.6rem .8rem;white-space:pre-wrap;font-size:.9rem;max-height:7.2rem;overflow:auto;border-bottom:1px solid #eee}
-.box .txt.h{font-weight:700;font-size:1.05rem}
+.box .txt.hl2,.box .txt.hl3,.box .txt.hl4,.box .txt.acc{font-weight:700;color:#0D4471;line-height:1.2}
+.box .txt.hl2{font-size:1.9rem}.box .txt.hl3{font-size:1.45rem}.box .txt.hl4{font-size:1.15rem}
+.box .txt.acc{font-size:1.05rem}.box .txt.acc::before{content:'\25B8  ';color:#0A6EBD}
 .box .ctl{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.45rem .6rem;background:#f7f8f9;font-size:.8rem}
 .seg{display:inline-flex}.seg button{border-radius:0;margin-left:-1px;padding:.2rem .6rem;font-size:.8rem}
 .seg button:first-child{border-radius:4px 0 0 4px;margin-left:0}.seg button:last-child{border-radius:0 4px 4px 0}
@@ -111,6 +114,7 @@ iframe.phone{width:390px;border-left:1px solid #bbb;border-right:1px solid #bbb}
 <div class="xr"><span class="fl">Banner file name</span><input id="ex-banner" type="text" placeholder="Optional. Blank uses the default template banner (banner_03.jpg)"></div></div>
 <div class="xc"><div class="ct">Bottom of page</div>
 <div class="xr"><span class="fl">Unit, Module, or Week</span><div class="inl"><select id="ex-uk" aria-label="Unit, Module, or Week"><option>Unit</option><option>Module</option><option>Week</option></select><input id="ex-un" type="text" size="6" placeholder="e.g., 2" aria-label="Number or name"></div></div>
+<div class="xr"><span class="fl">License line</span><select id="ex-lic" aria-label="Creative Commons license"></select></div>
 <div class="xr"><span class="fl">Last published</span><input id="ex-date" type="date"></div></div>
 </div>
 </div>
@@ -260,7 +264,7 @@ function accordion(inner,st){
  }
  const lv=Math.min(6,st.lvl+1);
  let h=blocks(intro,st)+'<div class="accordion">\n';
- for(const p of panels)h+=`<div class="card">\n<div class="card-header">\n<h${lv} class="card-title">${inline(p.t,{plain:1})}</h${lv}>\n</div>\n<div class="collapse">\n<div class="card-body">\n${blocks(p.b,{lvl:lv})}</div>\n</div>\n</div>\n`;
+ for(const p of panels)h+=`<div class="card">\n<div class="card-header">\n<h${lv} class="card-title text-left">${inline(p.t,{plain:1})}</h${lv}>\n</div>\n<div class="collapse">\n<div class="card-body">\n${blocks(p.b,{lvl:lv})}</div>\n</div>\n</div>\n`;
  return h+'</div>\n';
 }
 function blocks(lines,st,large){
@@ -284,7 +288,7 @@ function blocks(lines,st,large){
    st.lvl=lv;
    const txt=m[2].replace(/\s+#+$/,'');
    if(lv===1&&!st.title)st.title=inline(txt,{plain:1}).replace(/<[^>]+>/g,'');
-   out+=`<h${lv}${lv===1?' class="text-center"':''}>${inline(txt,{plain:1})}</h${lv}>\n`;i++;continue;
+   out+=`<h${lv} class="${lv===1?'text-center':'text-left'}">${inline(txt,{plain:1})}</h${lv}>\n`;i++;continue;
   }
   if(/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)){out+='<hr>\n';i++;continue}
   if(/^\s*>/.test(l)){
@@ -437,7 +441,7 @@ body{margin:0;font:16px/1.5 Lato,system-ui,-apple-system,"Segoe UI",sans-serif;c
 .bs-nav .fas{color:#fff;font-size:.8rem;margin-left:.35rem}
 .bs-crumb{padding:.9rem 2rem .15rem;font-size:.95rem}
 .bs-crumb a{color:#006fbf}.bs-crumb .sep{margin:0 .7rem;color:#494c4e}
-.bs-title{position:relative;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0 2rem;margin-bottom:.9rem}
+.bs-title{position:relative;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0 .75rem;margin-bottom:.9rem}
 .bs-title .t{font-size:2.5rem;line-height:1.25;color:#202122}
 .bs-title .t .fas{font-size:1.1rem;margin-left:1rem;color:#494c4e}
 .bs-title .tools{display:flex;align-items:center;gap:2rem;flex:0 0 auto}
@@ -447,8 +451,10 @@ body{margin:0;font:16px/1.5 Lato,system-ui,-apple-system,"Segoe UI",sans-serif;c
 .pn span{padding:.55rem 1.05rem;display:inline-flex}.pn span+span{border-left:1px solid #c5c9cd}
 .pn .fas{font-size:1rem;color:#202122}
 .bs-tab{position:absolute;left:0;top:-12px;width:14px;height:104px;border:1px solid #c5c9cd;border-left:0;border-radius:0 8px 8px 0;background:#f7f8f9;display:flex;align-items:center;justify-content:center;font-size:.55rem;color:#202122}
-.bs-page{padding:0 2rem;font-size:19px;line-height:1.55;color:#494c4e}
-.bs-page h1{font-size:2.1em}.bs-page h2{font-size:1.6em}.bs-page h3{font-size:1.3em}
+.bs-page{padding:0 1rem;font-size:19px;line-height:1.63;color:#494c4e}
+.bs-page h1{font-size:40px;margin:3rem 0 2rem}.bs-page h2{font-size:32px}.bs-page h3{font-size:28px}.bs-page h4{font-size:24px}
+.bs-page p{margin:0 0 1rem}
+.bs-page ul:not(.list-unstyled),.bs-page ol{padding-left:42px;margin:0 0 1rem}.bs-page li:not(.d-flex){margin-bottom:22px}.bs-page li:last-child{margin-bottom:0}.bs-page strong{color:#202122}
 @media(max-width:600px){
  .bs-head{height:70px}.bs-course{font-size:1.05rem}.bs-div,.bs-icons .hide-sm,.bs-user{display:none}.bs-icons{gap:1rem}.bs-icons .fas{font-size:1.3rem}
  .bs-nav{height:52px;font-size:1rem;gap:1rem;padding:0 1rem}.bs-crumb{padding:.6rem 1rem 0;font-size:.8rem}
@@ -458,13 +464,13 @@ body{margin:0;font:16px/1.5 Lato,system-ui,-apple-system,"Segoe UI",sans-serif;c
 .container-fluid{padding:0 15px}.row{display:flex;flex-wrap:wrap;margin:0 -15px}
 .col-12{flex:0 0 100%;padding:0 15px}.col-main{flex:0 0 83.33%;margin-left:8.33%;padding:0 15px}
 @media(max-width:600px){.col-main{flex:0 0 100%;margin-left:0}}
-.banner{background:linear-gradient(#5f8f4f,#8fb77d);color:#eef7ea;text-align:center;height:205px;display:flex;align-items:center;justify-content:center;margin:0 -15px;font-size:.85rem}
-h1,h2,h3,h4{line-height:1.2;margin:1.4rem 0 .6rem}
+.banner{background:linear-gradient(#5f8f4f,#8fb77d);color:#eef7ea;text-align:center;height:202px;display:flex;align-items:center;justify-content:center;margin:0 -15px;font-size:.85rem}
+h1,h2,h3,h4{line-height:1.2;margin:1rem 0 1.15rem;font-weight:700}
 h1,h2,h3,h4,h5,h6,.card-icon,.fas{color:#0D4471}
-h1.text-center,.text-center{text-align:center}
+h1.text-center,.text-center{text-align:center}.text-left{text-align:left}
 img{max-width:100%;height:auto}.d-block{display:block}.mx-auto{margin-left:auto;margin-right:auto}
 .float-right{float:right}.float-left{float:left}.ml-3{margin-left:1rem}.mr-3{margin-right:1rem}.mb-2{margin-bottom:.5rem}
-.list-unstyled{list-style:none;padding:0;margin:1rem 0}.d-flex{display:flex}.align-items-baseline{align-items:baseline}.mr-3{margin-right:1rem}.fa-fw{width:1.25em;text-align:center;flex:0 0 1.25em}
+.list-unstyled{list-style:none;padding:0;margin:0 0 1rem}.d-flex{display:flex}.align-items-baseline{align-items:baseline}.mr-3{margin-right:1rem}.fa-fw{width:1.25em;text-align:center;flex:0 0 1.25em}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 .card-graphic{border:1px solid #0D4471;background:#EDF8FE;border-radius:.3rem;margin:1.2rem 0}
 .card-graphic .card-body{display:flex;gap:1rem;padding:1rem 1.25rem}
@@ -496,6 +502,13 @@ document.addEventListener('click',function(e){
 document.querySelectorAll('.fas').forEach(function(el){
  if(!getComputedStyle(el).getPropertyValue('--ic').trim()){el.style.cssText='display:inline-block;width:1em;height:1em;background:none;-webkit-mask:none;mask:none;border:1px dashed #c00;color:#c00;font-size:.7em;line-height:1;text-align:center';el.textContent='?';el.title='Preview cannot draw this icon. Check the name against Font Awesome 5 free.'}
 });`;
+const LICS=[['by','CC BY 4.0','Attribution 4.0 International','by/4.0/'],['by-sa','CC BY-SA 4.0','Attribution-ShareAlike 4.0 International','by-sa/4.0/'],['by-nc','CC BY-NC 4.0','Attribution-NonCommercial 4.0 International','by-nc/4.0/'],['by-nc-sa','CC BY-NC-SA 4.0','Attribution-NonCommercial-ShareAlike 4.0 International','by-nc-sa/4.0/'],['by-nd','CC BY-ND 4.0','Attribution-NoDerivatives 4.0 International','by-nd/4.0/'],['by-nc-nd','CC BY-NC-ND 4.0','Attribution-NonCommercial-NoDerivatives 4.0 International','by-nc-nd/4.0/'],['cc0','CC0 1.0 (public domain)','CC0 1.0 Universal','zero/1.0/']];
+function licHtml(){
+ const k=$('ex-lic').value,L=LICS.find(x=>x[0]===k)||LICS[0];
+ const u='https://creativecommons.org/'+(k==='cc0'?'publicdomain/':'licenses/')+L[3];
+ const a=link('Creative Commons '+esc(L[2]),u);
+ return k==='cc0'?`This page is dedicated to the public domain under ${a}, unless otherwise noted.`:`Unless otherwise noted, this page is licensed under ${a}.`;
+}
 function termGuess(){const m=new Date().getMonth()+1;return m>=8?'FA':m>=6?'SU':'SP'}
 function courseInfo(){
  const v=id=>$(id).value.trim(),org=v('ex-org'),yr=v('ex-year'),term=$('ex-term').value,cid=v('ex-cid').toUpperCase(),crn=v('ex-crn'),bad=[];
@@ -524,6 +537,9 @@ ${foot}
 </ul></div>
 <div class="col-4 text-right"><p><img src="${ASSET}/img/logo.png" alt="logo"></p></div>
 </div>
+<div class="row text-left">
+<div class="col-12"><p class="small mb-0">${licHtml()}</p></div>
+</div>
 </footer></div>
 </div>
 </div>
@@ -544,7 +560,7 @@ function pageHtml(res){
 <div class="bs-page"><div class="container-fluid"><div class="row"><div class="col-12"><div class="banner">[banner image]</div></div>
 <div class="col-main">
 ${res.html}</div>
-<div class="col-12"><footer><div class="foot"><ul>${foot}</ul><div class="logo">[GCC logo]</div></div></footer></div>
+<div class="col-12"><footer><div class="foot"><ul>${foot}</ul><div class="logo">[GCC logo]</div></div><p class="small" style="margin:.5rem 0 1rem">${licHtml()}</p></footer></div>
 </div></div></div>
 <script>${PREVIEW_JS}<\/script></body></html>`;
 }
@@ -846,8 +862,8 @@ function boxesHtml(){
     if(!inRun&&!isLead(prev))ctl+=`<label class="lead">Lead-in sentence: tell students why to open these<input type="text" data-a="lead" data-i="${i}" value="${esc(c.leadin)}"></label>`;
    }
   }
-  const sh=c.type==='heading'||c.type==='acctitle';
-  h+=`<div class="box t-${c.type}${gone?' gone':''}"><div class="txt${sh?' h':''}">${c.type==='callout'?`<span class="fas fa-${CALLOUT_ICONS[c.icon]||'info-circle'} cico"></span>`:''}${esc(body.length>600?body.slice(0,600)+'…':body)}</div><div class="ctl">${ctl}</div></div>`;
+  const sh=c.type==='heading'?' hl'+c.level:c.type==='acctitle'?' acc':'';
+  h+=`<div class="box t-${c.type}${gone?' gone':''}"><div class="txt${sh}">${c.type==='callout'?`<span class="fas fa-${CALLOUT_ICONS[c.icon]||'info-circle'} cico"></span>`:''}${esc(body.length>600?body.slice(0,600)+'…':body)}</div><div class="ctl">${ctl}</div></div>`;
  });
  return h||'<p class="note" style="padding:1rem">No content found.</p>';
 }
@@ -1014,6 +1030,8 @@ $('next2').onclick=()=>{renderBoxes();show(3)};
 $('back3').onclick=()=>show(2);
 $('next3').onclick=()=>{finalMd=buildMarkdown($('ex-title').value.trim());render();{const ci=courseInfo(),bn=$('ex-banner').value.trim();$('dlnote').textContent=!bn?'Using the default template banner.':ci.bad.length?'Banner file name is set, but the course ID is incomplete, so the default template banner will be used.':''}show(4)};
 $('back4').onclick=()=>show(3);
+$('ex-lic').innerHTML=LICS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join('');try{$('ex-lic').value=localStorage.getItem('gccLic')||'by'}catch(e){}
+$('ex-lic').addEventListener('change',()=>{try{localStorage.setItem('gccLic',$('ex-lic').value)}catch(e){}});
 $('ex-year').value=String(new Date().getFullYear());$('ex-term').value=termGuess();
 $('ex-org').value='';$('ex-cid').value='ABC000';$('ex-crn').value='';
 try{const sv=JSON.parse(localStorage.getItem('gccCourse3')||'null');if(sv){['org','cid','crn'].forEach(k=>{if(sv[k])$('ex-'+k).value=sv[k]})}}catch(e){}
