@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Markdown to Brightspace</title>
+<title>Loy's Markdown to Brightspace</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap">
 <style>
 *{box-sizing:border-box}
@@ -39,6 +39,7 @@ button:hover,label.btn:hover{background:#eee}
 .ctl select{font:inherit;font-size:.8rem;padding:.15rem}
 button.go{background:#0A6EBD;color:#fff;border-color:#0A6EBD}
 button.go:hover{background:#075a9c}
+#stepnote{flex:1;font-size:.88rem;color:#333;min-width:16rem}
 .note{font-size:.78rem;color:#666}
 .extras{padding:.8rem 1rem 0;display:flex;flex-direction:column;gap:.8rem;font-size:.9rem}
 .xc{border:1px solid #cfd6dd;border-radius:6px;background:#fff}
@@ -70,8 +71,8 @@ iframe{border:0;background:#fff;width:100%;height:100%}
 iframe.phone{width:390px;border-left:1px solid #bbb;border-right:1px solid #bbb}
 </style></head><body>
 <header class="app">
-<h1>Markdown to Brightspace</h1>
-<span class="note" id="stepnote">Step 1 of 4</span>
+<h1>Loy's Markdown to Brightspace</h1>
+<span class="note" id="stepnote"></span>
 </header>
 <main>
 <section class="step on" id="step1"><div class="pane">
@@ -944,7 +945,13 @@ $('boxes').addEventListener('change',e=>{
 /* ---------- wiring ---------- */
 const src=$('src'),view=$('view');
 let timer=null;
-function show(n){[1,2,3,4].forEach(i=>$('step'+i).classList.toggle('on',i===n));$('stepnote').textContent='Step '+n+' of 4';}
+const STEPTXT=[
+ 'Paste or upload your content from a Word file, a web page, or markdown. Nothing is changed yet; this is just the raw material.',
+ 'Fill in the page title and the extras that appear at the top and bottom of the page. Anything you leave blank is skipped.',
+ 'Decide how each piece of content should look: paragraph, heading, list, callout, accordion, video, or link. Suggested choices are marked, and you make the final call.',
+ 'Check how the page will look to students, then download the HTML file to upload into Brightspace.'];
+function show(n){[1,2,3,4].forEach(i=>$('step'+i).classList.toggle('on',i===n));$('stepnote').innerHTML='<b>Step '+n+' of 4.</b> '+STEPTXT[n-1];}
+show(1);
 function plainLine(l){return l.replace(/^#+\s*/,'').replace(/[*_`]/g,'').replace(/:\s*$/,'').trim()}
 function suggestTitle(md){
  const lines=md.replace(/\r\n?/g,'\n').split('\n');
