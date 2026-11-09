@@ -772,7 +772,8 @@ function suggest(ch){
  let run=[];
  const flushRun=()=>{
   const exm=run.filter(x=>/\b(example|case study|scenario)\b/i.test(ch[x.t].lines[0]));
-  if(run.length>=3||exm.length>=2)run.forEach(x=>{ch[x.t].type='acctitle';ch[x.t].sug='acc';x.b.forEach(k=>{ch[k].type='acctext';ch[k].sug='acc'})});
+  const paras=run.reduce((a,x)=>a+x.b.length,0),words=run.reduce((a,x)=>a+x.b.reduce((q,k)=>q+wc(textOf(ch[k])),0),0);
+  if((run.length>=3||exm.length>=2)&&paras>=4&&words>=250)run.forEach(x=>{ch[x.t].type='acctitle';ch[x.t].sug='acc';x.b.forEach(k=>{ch[k].type='acctext';ch[k].sug='acc'})});
   run=[];
  };
  secs.forEach(x=>{
