@@ -2,13 +2,14 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loy's Markdown to Brightspace</title>
+<title>Loy's MD2BSP</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap">
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,sans-serif;color:#222;background:#f4f5f7}
-header.app{padding:.6rem 1rem;background:#fff;border-bottom:1px solid #ddd;display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
-header.app h1{font-size:1rem;margin:0;font-weight:600}
+header.app{padding:.7rem 1rem;background:#6F2DA8;color:#fff;border-bottom:5px solid #F4B400;display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+header.app h1{margin:0;color:#fff;line-height:1.05;display:flex;flex-direction:column}
+header.app h1 .by{font-size:.8rem;font-weight:600;opacity:.9}header.app h1 .big{font-size:2.2rem;font-weight:500;letter-spacing:.03em}
 main{padding:1rem;height:calc(100vh - 3.2rem)}
 .step{display:none;height:100%}
 .step.on{display:flex}
@@ -39,7 +40,7 @@ button:hover,label.btn:hover{background:#eee}
 .ctl select{font:inherit;font-size:.8rem;padding:.15rem}
 button.go{background:#0A6EBD;color:#fff;border-color:#0A6EBD}
 button.go:hover{background:#075a9c}
-#stepnote{flex:1;font-size:.88rem;color:#333;min-width:16rem}
+#stepnote{flex:1;font-size:.88rem;color:#fff;min-width:16rem}
 .note{font-size:.78rem;color:#666}
 .extras{padding:.8rem 1rem 0;display:flex;flex-direction:column;gap:.8rem;font-size:.9rem}
 .xc{border:1px solid #cfd6dd;border-radius:6px;background:#fff}
@@ -71,7 +72,7 @@ iframe{border:0;background:#fff;width:100%;height:100%}
 iframe.phone{width:390px;border-left:1px solid #bbb;border-right:1px solid #bbb}
 </style></head><body>
 <header class="app">
-<h1>Loy's Markdown to Brightspace</h1>
+<h1><span class="by">Loy's</span><span class="big">MD2BSP</span></h1>
 <span class="note" id="stepnote"></span>
 </header>
 <main>
@@ -323,14 +324,14 @@ let VSEC=0;
 function toSec(t){if(!t)return 0;const p=t.split(':').map(Number);if(p.some(isNaN))return 0;return p.reduce((a,x)=>a*60+x,0)}
 function kitHtml(ex,readMin,vidSec){
  const rows=[];
- const row=(ic,label,txt)=>rows.push(`<li class="d-flex align-items-baseline"><span class="fas fa-${ic} fa-fw mr-3" aria-hidden="true"></span><span><strong>${label}:</strong> ${txt}</span></li>`);
+ const row=(ic,label,txt)=>rows.push(`<li class="d-flex align-items-baseline mb-1"><span class="fas fa-${ic} fa-fw mr-3" aria-hidden="true"></span><span><strong>${label}:</strong> ${txt}</span></li>`);
  row('clock','Time','Reading: '+readMin+' min'+(vidSec>0?' | Video: '+Math.max(1,Math.round(vidSec/60))+' min':''));
  if(ex.before)row('clipboard-list','Before you start',inline(ex.before));
  if(ex.mat)row('tools','Materials needed',inline(ex.mat));
  if(ex.kind==='key'&&ex.terms.trim())row('key','Key terms',inline(ex.terms.trim().replace(/\s*\n\s*/g,', ')));
  if(ex.kind==='guide'&&ex.terms.trim())row('question-circle','Guiding questions',ex.terms.trim().split(/\n+/).map(q=>inline(q.trim())).join('<br>'));
- if(ex.out)rows.push(`<li class="d-flex align-items-baseline"><span class="fas fa-bullseye fa-fw mr-3" aria-hidden="true"></span><span><strong>Working toward:</strong> ${inline(ex.out)}</span></li>`);
- return '<ul class="list-unstyled">\n'+rows.join('\n')+'\n</ul>\n';
+ if(ex.out)rows.push(`<li class="d-flex align-items-baseline mb-1"><span class="fas fa-bullseye fa-fw mr-3" aria-hidden="true"></span><span><strong>Working toward:</strong> ${inline(ex.out)}</span></li>`);
+ return '<ul class="list-unstyled small">\n'+rows.join('\n')+'\n</ul>\n';
 }
 function convert(md,ex){
  ex=ex||{};
@@ -470,6 +471,7 @@ img{max-width:100%;height:auto}.d-block{display:block}.mx-auto{margin-left:auto;
 .card-graphic .card-icon{flex:0 0 1.8rem;font-size:1.6rem}.card-graphic .card-icon p,.card-graphic .card-text>*:first-child{margin-top:0}
 .card-graphic .card-text{flex:1;min-width:0}.card-graphic .card-text>*:last-child{margin-bottom:0}
 .accordion{margin:1rem 0}.accordion .card{border:1px solid #ccd1d6;border-radius:0;margin:0 0 -1px;overflow:hidden}
+.small{font-size:80%}.mb-1{margin-bottom:.25rem}
 .accordion .card-header{background:#f4f6f8;padding:.6rem 1rem;cursor:pointer}
 .accordion .card-title{margin:0;font-size:1.1rem}.accordion .collapse{display:none}.accordion .collapse.show{display:block}
 .accordion .card-body{padding:1rem}
