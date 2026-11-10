@@ -200,7 +200,7 @@ function inline(s,opt){
  s=s.replace(/ |&nbsp;/g,' ');
  s=s.replace(/\\([\\`*_\[\]()#+\-.!])/g,(m,c)=>H(esc(c)));
  s=s.replace(/`([^`]+)`/g,(m,c)=>H('<code>'+esc(c)+'</code>'));
- s=s.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,(m,a,u)=>H(`<img src="${esc(u)}" alt="${esc(a)}" class="d-block mx-auto img-fluid">`));
+ s=s.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,(m,a,u)=>H(`<img src="${esc(u)}" alt="${esc(a)}"${a?'':' role="presentation" aria-hidden="true"'} class="d-block mx-auto img-fluid">`));
  s=s.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,(m,t,u)=>H(link(inline(t,{noauto:1}),u)));
  if(!opt.noauto)s=s.replace(/(^|[\s(])(https?:\/\/[^\s<)]*[^\s<).,;:!?])/g,(m,p,u)=>p+H(link(esc(u),u)));
  s=s.replace(/( {2,}|\\)\n/g,'\u0002');
@@ -330,7 +330,7 @@ function blocks(lines,st,large){
    let al=null,w=null;(im[3]||'').split(/[\s,]+/).forEach(x=>{if(/^(left|right|center)$/i.test(x))al=x.toLowerCase();else if(/^\d+(px)?$/.test(x))w=parseInt(x)});
    if(!al)al=(w&&w<300)?'right':'center';
    const cls=al==='center'?'d-block mx-auto img-fluid':al==='right'?'float-right ml-3 mb-2 img-fluid':'float-left mr-3 mb-2 img-fluid';
-   out+=`<p><img src="${esc(im[2])}" alt="${esc(im[1])}"${im[1]?'':' role="presentation"'}${w?` width="${w}"`:''} class="${cls}"></p>\n`;
+   out+=`<p><img src="${esc(im[2])}" alt="${esc(im[1])}"${im[1]?'':' role="presentation" aria-hidden="true"'}${w?` width="${w}"`:''} class="${cls}"></p>\n`;
   }else if(/^(\*|_)(?![*_])[\s\S]+\1$/.test(t)&&/<img /.test(out.slice(-400))){
    out+=`<p class="text-center"><em>${inline(t.slice(1,-1))}</em></p>\n`;
   }else out+=`<p>${inline(t)}</p>\n`;
@@ -529,7 +529,7 @@ function fileHtml(res){
  const sp=x=>x.trim().replace(/ /g,'%20');
  const ci=courseInfo(),banner=$('ex-banner').value.trim();
  const bsrc=(banner&&!ci.bad.length)?`/content/enforced/${sp(ci.folder)}/Headers/${sp(banner)}`:`${ASSET}/img/banner_03.jpg`;
- const ban=`<div class="col-12 banner-img">\n<p><img src="${bsrc}" alt="" title="" data-d2l-editor-default-img-style="true" style="max-width: 100%;"></p>\n</div>\n`;
+ const ban=`<div class="col-12 banner-img">\n<p><img src="${bsrc}" alt="" title="" role="presentation" aria-hidden="true" data-d2l-editor-default-img-style="true" style="max-width: 100%;"></p>\n</div>\n`;
  const foot=FOOTER_LINKS.map(f=>`<li class="mb-1"><span class="fas fa-${f.icon} fa-fw mr-2" aria-hidden="true"></span>${link(esc(f.text),f.href)}</li>`).join('\n');
  return HEAD_TOP+`   <title>${esc(res.title)}</title>
 </head><body><div class="container-fluid">
@@ -542,7 +542,7 @@ ${res.html}</div>
 <ul class="list-unstyled small mb-0">
 ${foot}
 </ul></div>
-<div class="col-4 text-right"><p><img src="${ASSET}/img/logo.png" alt="logo"></p></div>
+<div class="col-4 text-right"><p><img src="${ASSET}/img/logo.png" alt="Genesee Community College tornado logo"></p></div>
 </div>
 </footer></div>
 </div>
@@ -628,6 +628,28 @@ function bareUrls(text){
  return out;
 }
 function hostOf(u){try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return u}}
+function linksIn(text){
+ const out=[];let m;const re=/\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+ while((m=re.exec(text)))out.push({k:'md',start:m.index,end:m.index+m[0].length,text:m[1],url:m[2]});
+ bareUrls(text).forEach(u=>out.push({k:'bare',start:u.start,end:u.start+u.raw.length,raw:u.raw,text:'',url:u.raw}));
+ return out.sort((a,b)=>a.start-b.start);
+}
+function linkEdit(c,idx,field,val){
+ const t=c.lines.join(' '),L=linksIn(t)[idx];if(!L)return;
+ let nt=t;
+ if(L.k==='md'){
+  const nx=field==='t'?val:L.text,nu=field==='u'?clean(plainUrl(val.trim())):L.url;
+  nt=t.slice(0,L.start)+'['+nx+']('+nu+')'+t.slice(L.end);
+ }else if(field==='t'){c.ut=c.ut||{};c.ut[L.raw]=val}
+ else{const nu=val.trim();if(c.ut&&c.ut[L.raw]!==undefined){c.ut[nu]=c.ut[L.raw];delete c.ut[L.raw]}nt=t.slice(0,L.start)+nu+t.slice(L.end)}
+ c.lines=[nt];
+}
+function linkRows(c,i){
+ const L=linksIn(c.lines.join(' '));if(!L.length)return '';
+ return '<div class="vf" style="grid-template-columns:1fr 1fr"><div style="grid-column:1/-1;font-size:.75rem;color:#444">'+(L.length>1?'Links in this text':'Link in this text')+'</div>'+L.map((x,k)=>{
+  const txt=x.k==='md'?x.text:((c.ut&&c.ut[x.raw])||hostOf(/^https?:/i.test(x.raw)?x.raw:'https://'+x.raw));
+  return `<label>Link text${L.length>1?' '+(k+1):''}<input type="text" data-a="plt" data-i="${i}" data-k="${k}" value="${esc(txt)}"></label><label>Link address${L.length>1?' '+(k+1):''}<input type="text" data-a="plu" data-i="${i}" data-k="${k}" value="${esc(x.url)}"></label>`}).join('')+'</div>';
+}
 function linkify(text,map){
  const us=bareUrls(text);let o=text;
  for(let k=us.length-1;k>=0;k--){const u=us[k],t=(map&&map[u.raw])||hostOf(u.url);o=o.slice(0,u.start)+'['+t+']('+u.url+')'+o.slice(u.start+u.raw.length)}
@@ -892,8 +914,7 @@ function boxesHtml(){
    if(c.type==='video'){const v=c.video,miss=[];if(!v.url)miss.push('link');if(!v.title)miss.push('title');if(!v.length)miss.push('length');if(!v.language)miss.push('language');
     if(miss.length)ctl+=`<span class="tag warn">Needed: ${miss.join(', ')}</span>`;
     ctl+=`<div class="vf"><label>Video link<input type="text" data-a="vurl" data-i="${i}" value="${esc(v.url)}"></label><label>Title (for screen readers)<input type="text" data-a="vtitle" data-i="${i}" value="${esc(v.title)}"></label><label>Length<input type="text" data-a="vlen" data-i="${i}" value="${esc(v.length)}" placeholder="3:29"></label><label>Language<input type="text" data-a="vlang" data-i="${i}" value="${esc(v.language)}" placeholder="English with subtitles"></label></div>`}
-   if(c.kind==='para'&&c.lines&&(c.type==='para'||c.type==='callout'||c.type==='acctext')){const us=bareUrls(c.lines.join(' '));
-    if(us.length)ctl+='<div class="vf" style="grid-template-columns:1fr">'+us.map(u=>`<label>Web address in this text becomes a link. Link text for ${esc(u.raw.length>70?u.raw.slice(0,70)+'…':u.raw)}<input type="text" data-a="utext" data-i="${i}" data-k="${esc(u.raw)}" value="${esc((c.ut&&c.ut[u.raw])||hostOf(u.url))}"></label>`).join('')+'</div>'}
+   if(c.kind==='para'&&c.lines&&(c.type==='para'||c.type==='callout'||c.type==='acctext'))ctl+=linkRows(c,i);
    if(c.kind==='para'&&c.lines&&(c.type==='para'||c.type==='acctext')&&firstUrl(c)){if(c.rd===undefined)c.rd=PARA_RD.test(c.lines.join(' '));ctl+=readRow(c,c,i)}
    if(c.type==='callout')ctl+=`<label>Icon <select data-a="icon" data-i="${i}">${ICONS.map(n=>`<option${c.icon===n?' selected':''}>${n}</option>`).join('')}</select></label>`;
    if(c.type==='list'){ctl+=`<label><input type="checkbox" data-a="ordered" data-i="${i}"${c.ordered?' checked':''}> Numbered</label>`;if(c.ordered)ctl+=`<label><input type="checkbox" data-a="large" data-i="${i}"${c.large?' checked':''}> Large numbers</label>`}
@@ -999,6 +1020,8 @@ $('boxes').addEventListener('change',e=>{
  else if(a==='large')c.large=t.checked;
  else if(a==='lead')c.leadin=t.value;
  else if(a==='utext'){c.ut=c.ut||{};c.ut[t.dataset.k]=t.value}
+ else if(a==='plt')linkEdit(c,+t.dataset.k,'t',t.value);
+ else if(a==='plu')linkEdit(c,+t.dataset.k,'u',t.value);
  else if(a==='lurl')c.link.url=clean(t.value.trim());
  else if(a==='ltext')c.link.text=t.value;
  else if(a==='tcap')c.cap=t.value;
