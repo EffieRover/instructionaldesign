@@ -115,7 +115,7 @@ iframe.phone{width:390px;border-left:1px solid #bbb;border-right:1px solid #bbb}
 <div class="xr"><span class="fl">Course ID</span><div class="inl">
 <input id="ex-org" type="text" size="8" maxlength="8" placeholder="OrgID" aria-label="OrgID">
 <span class="fix">-</span><input id="ex-year" type="text" size="4" maxlength="4" aria-label="Year"><select id="ex-term" aria-label="Semester"><option>FA</option><option>SP</option><option>SU</option><option>Noterm</option></select>
-<span class="fix">-&nbsp;GNC&nbsp;-</span><input id="ex-cid" type="text" size="12" maxlength="24" placeholder="ABC123" aria-label="Course ID"><span class="fix">-</span><input id="ex-crn" type="text" size="6" maxlength="5" placeholder="CRN (optional)" aria-label="CRN (optional)"></div></div>
+<span class="fix">-&nbsp;GNC&nbsp;-</span><input id="ex-cid" type="text" size="12" maxlength="24" placeholder="ABC123" aria-label="Course ID"><span class="fix">-</span><input id="ex-crn" type="text" size="10" maxlength="24" placeholder="CRN (optional)" aria-label="CRN (optional)"></div></div>
 <div class="xr"><span></span><div class="hint" id="ex-fold" style="grid-column:auto;margin:0"></div></div>
 <div class="xr"><span class="fl">Image folder</span><input id="ex-hdr" type="text" placeholder="Headers (the default), or the folder your course uses" aria-label="Image folder"></div>
 <div class="xr"><span class="fl">Banner file name</span><input id="ex-banner" type="text" placeholder="Optional. Blank uses the default template banner (banner_03.jpg)"></div></div>
@@ -522,14 +522,14 @@ function courseInfo(){
  const v=id=>$(id).value.trim(),org=v('ex-org'),term=$('ex-term').value,nt=term==='Noterm',yr=nt?'':v('ex-year'),crn=v('ex-crn'),bad=[];
  let cid=v('ex-cid');if(/^[a-z]{3}\d{3}$/i.test(cid))cid=cid.toUpperCase();
  const hdr=v('ex-hdr')||'Headers';
- if(!/^\d{5,8}$/.test(org)||+org<42439)bad.push('OrgID (5 to 8 digits, 42439 or higher)');
+ if(!/^\d+$/.test(org)||+org<42439)bad.push('OrgID (digits only, 42439 or higher)');
  if(!nt&&!/^\d{4}$/.test(yr))bad.push('year');
  if(!/^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$/.test(cid))bad.push('Course ID (letters, numbers, and single hyphens)');
- if(crn&&!/^\d{5}$/.test(crn))bad.push('CRN (5 digits, or leave blank)');
+ if(crn&&!/^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$/.test(crn))bad.push('CRN (letters, numbers, hyphens, or leave blank)');
  if(/[\\/]/.test(hdr))bad.push('Image folder (one folder name, no slashes)');
  return {folder:`${org}-${nt?'Noterm':yr+term}-GNC-${cid}${crn?'-'+crn:''}`,hdr,bad};
 }
-function showFolder(){const c=courseInfo(),e=$('ex-fold');e.className='hint'+(c.bad.length?' bad':'');e.textContent=c.bad.length?'Still needed: '+c.bad.join(', '):'/content/enforced/'+c.folder+'/'+c.hdr+'/'}
+function showFolder(){const c=courseInfo(),e=$('ex-fold');e.className='hint';e.innerHTML='<div>Building: <code>/content/enforced/'+esc(c.folder)+'/'+esc(c.hdr)+'/</code></div>'+(c.bad.length?'<div class="bad" style="color:#a33">Still needed: '+esc(c.bad.join(', '))+'</div>':'')}
 function unitCode(){const k=$('ex-uk').value[0],n=$('ex-un').value.trim();if(!n)return '';return k+(/^\d$/.test(n)?'0'+n:n.toUpperCase().replace(/[^A-Z0-9]+/g,''))}
 function fileHtml(res){
  const sp=x=>x.trim().replace(/ /g,'%20');
